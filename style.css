@@ -382,3 +382,9 @@ body::before{left:clamp(10px,1.6vw,24px)}body::after{right:clamp(10px,1.6vw,24px
 .copy:hover,.copy.done{background:var(--teal-deep);color:var(--paper)}
 .support__note{max-width:56ch;margin-top:clamp(24px,3vw,40px);font-size:.95rem;opacity:.8}
 .acct__kind{font-family:var(--body);font-weight:700;font-size:clamp(1.25rem,1.9vw,1.55rem);letter-spacing:.01em;margin-bottom:16px}
+
+.schedule li.sep{display:block;padding:26px 0 10px;border-top:0}
+.schedule li.sep span{font-family:var(--body);text-transform:uppercase;letter-spacing:.24em;font-size:.76rem;color:var(--mocha)}
+.schedule li.sep:first-child{padding-top:0}
+.row dd{overflow-wrap:anywhere}
+.row dl>div{max-width:34ch}

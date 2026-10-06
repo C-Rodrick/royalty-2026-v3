@@ -2,15 +2,27 @@
    EDIT THIS BLOCK: couple names, date, and RSVP delivery.
    ============================================================ */
 const CONFIG = {
-  bride: 'Bride',                       // TODO: bride's name
-  groom: 'Groom',                       // TODO: groom's name
-  date: '2026-12-19T14:00:00+01:00',    // TODO: main ceremony date/time (Cameroon is UTC+1)
+  bride: 'Joyce',                       // first name shown big on the front page
+  groom: 'Nervis',
+  brideFull: 'Asobo Joyce',             // full name shown on the couple cards
+  groomFull: 'Nzometiah Nervis',
+  date: '2026-12-03T10:00:00+01:00',    // the countdown ends when the civil wedding starts (Cameroon is UTC+1)
+  dateLabel: '3rd to 5th December 2026', // shown under the names and in the footer areas
   rsvpBy: '',                           // e.g. 'December 1st'
   whatsapp: '',                         // couple's number, digits only with country code, e.g. '237674139843'
   formEndpoint: '',                     // optional: a Formspree URL, e.g. 'https://formspree.io/f/xxxxxxx'
-  maps: {                               // paste Google Maps links for each venue
-    traditional: '', court: '', church: '', reception: ''
-  }
+  maps: {                               // Google Maps links (search links; replace with exact pins if you like)
+    civil: 'https://www.google.com/maps/search/?api=1&query=Buea+Council+Buea+Cameroon',
+    traditional: 'https://www.google.com/maps/search/?api=1&query=Mini+Koket+Bonduma+Buea+Cameroon',
+    church: 'https://www.google.com/maps/search/?api=1&query=LoveWorld+Arena+Christ+Embassy+Mayor+Street+Buea+Cameroon',
+    reception: 'https://www.google.com/maps/search/?api=1&query=Auntie+Kate+Banquet+Hall+Pastoral+Center+Buea+Cathedral+Buea+Cameroon'
+  },
+  events: [                             // used by the Add to calendar button
+    { name: 'Civil wedding', start: '2026-12-03T10:00:00+01:00', hours: 2, where: 'Buea Council, Buea' },
+    { name: 'Traditional wedding', start: '2026-12-03T17:00:00+01:00', hours: 5, where: 'Mini Koket, Bonduma, Buea' },
+    { name: 'Church wedding', start: '2026-12-05T11:00:00+01:00', hours: 4, where: 'LoveWorld Arena, Christ Embassy, Mayor Street, Buea' },
+    { name: 'Reception', start: '2026-12-05T17:00:00+01:00', hours: 5, where: 'Auntie Kate Banquet Hall, Pastorial Center, behind Buea Cathedral, Buea' }
+  ]
 };
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -22,7 +34,7 @@ root.classList.add('js');
 const when = new Date(CONFIG.date);
 const dateLong = isNaN(when) ? '' : when.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 $$('[data-bind]').forEach(el => {
-  const k = el.dataset.bind, v = k === 'dateLong' ? dateLong : CONFIG[k];
+  const k = el.dataset.bind, v = k === 'dateLong' ? (CONFIG.dateLabel || dateLong) : CONFIG[k];
   if (v) el.textContent = v;
 });
 document.title = `${CONFIG.bride} & ${CONFIG.groom} · Royalty 2026`;
@@ -156,13 +168,15 @@ $$('[data-map]').forEach(a => {
   else { a.addEventListener('click', e => e.preventDefault()); a.setAttribute('aria-disabled', 'true'); a.title = 'Add the Google Maps link in script.js'; }
 });
 
-/* add to calendar (.ics) */
+/* add to calendar (.ics): one entry for each event */
 $('#addCal').addEventListener('click', () => {
-  if (isNaN(when)) return;
   const f = d => d.toISOString().replace(/[-:]|\.\d{3}/g, '');
-  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Royalty 2026//EN', 'BEGIN:VEVENT',
-    `UID:royalty2026-${+when}@royalty`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(when)}`, `DTEND:${f(new Date(+when + 6 * 36e5))}`,
-    `SUMMARY:${CONFIG.bride} & ${CONFIG.groom}: Royalty 2026`, 'DESCRIPTION:Join us for the royal celebration.', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const body = CONFIG.events.map(e => {
+    const s = new Date(e.start);
+    return ['BEGIN:VEVENT', `UID:royalty2026-${+s}@royalty`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(s)}`, `DTEND:${f(new Date(+s + e.hours * 36e5))}`,
+      `SUMMARY:${e.name}: ${CONFIG.bride} & ${CONFIG.groom} (Royalty 2026)`, `LOCATION:${e.where.replace(/,/g, '\\,')}`, 'DESCRIPTION:Join us for the royal celebration.', 'END:VEVENT'].join('\r\n');
+  });
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Royalty 2026//EN', ...body, 'END:VCALENDAR'].join('\r\n');
   const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })), download: 'royalty-2026.ics' });
   a.click(); URL.revokeObjectURL(a.href);
 });
